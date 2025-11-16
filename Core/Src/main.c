@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usb_cdc_acm.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +44,8 @@
 PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
 /* USER CODE BEGIN PV */
-
+static const char usb_demo_message[] = "STM32H563 CDC ACM @9600 bps\r\n";
+static uint32_t usb_last_transmit_ms = 0U;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,6 +91,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USB_PCD_Init();
+  USB_CDC_ACM_Init(&hpcd_USB_DRD_FS);
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -101,6 +103,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    if (USB_CDC_ACM_Configured())
+    {
+      uint32_t now = HAL_GetTick();
+      if ((now - usb_last_transmit_ms) >= 1000U)
+      {
+        if (USB_CDC_ACM_Transmit((const uint8_t *)usb_demo_message,
+                                 sizeof(usb_demo_message) - 1U) == HAL_OK)
+        {
+          usb_last_transmit_ms = now;
+        }
+      }
+    }
   }
   /* USER CODE END 3 */
 }
